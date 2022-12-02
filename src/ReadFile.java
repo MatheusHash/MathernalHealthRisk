@@ -10,9 +10,9 @@ public class ReadFile {
             return this.caminho;
         }
 
-        public String setCaminhoArquivo(){
+        public String setCaminhoArquivo(String path){
             System.out.println("Digite o caminho para o arquivo:  \n");
-            this.caminho = "C:\\Users\\mathe\\Documents\\Projects\\MathernalHealthRiskHash\\MathernalHealthRisk\\src\\teste.txt";
+            this.caminho = path;
             return this.caminho;
         }
 
