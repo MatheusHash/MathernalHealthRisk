@@ -3,8 +3,17 @@ import java.util.Random;
 public class Perceptron {
 
 
+    private int epocas = 0;
+
+    private double e = 2.718;
+    public int getEpocas() {
+        return epocas;
+    }
+
+    private double teta = 0;
+
 //    Constante da taxa de aprendizado
-    private static double n = 0.5;
+    private static double n = 0.1;
 //    Valor de saida produzida pelo Perceptron
     private double y;
     
@@ -14,7 +23,13 @@ public class Perceptron {
     private int qtdPesos = this.pesos.length;
     private Random rand = new Random();
 
-    private double Entradas[] = new double[6];
+    private double dk;
+
+    public void setDk(double dk) {
+        this.dk = dk;
+    }
+
+    private double Entradas[] = new double[7];
 
     public void preenchePesos(){
         for (int i = 0; i < this.pesos.length; i++) {
@@ -22,84 +37,111 @@ public class Perceptron {
         }
     }
 
-    public double[] getPesos() {
-        return pesos;
-    }
 
-    public void showPesos(){
+    public void setTeta(){
+        double soma = 0;
         for (int i = 0; i < this.pesos.length; i++) {
-            System.out.println("Peso : " + i +"  "+ this.pesos[i]);
+            soma += (this.pesos[i] * this.Entradas[i]);
+        }
+        this.teta = (soma / this.pesos.length -1);
+    }
+
+    public void setPesos(){
+        for (int i = 0; i < this.pesos.length; i++) {
+            this.pesos[i] = this.rand.nextDouble();
         }
     }
-
-    public double treinamento(double w, double d, double x){
-        double result; result = w + n *( d - this.y ) * x ;
-        return result;
-    }
-
-    public void novosPesos(){
-        for (int i = 0; i < this.qtdPesos; i++) {
-            this.pesos[i] = treinamento(this.pesos[i], this.pesos[qtdPesos - 1], 1);
-        }
-    }
-
-    public double novoPeso(double w, double dk, double xk){
+    public double novoPeso(double w, double xk){
         double result=0;
-        for (int i = 0; i < this.Entradas.length; i++) {
-            result = w + this.n * (dk - this.y) * this.Entradas[i];
+        for (int i = 0; i < this.Entradas.length-1; i++) {
+            result = w + this.n * (this.dk - this.y) * this.Entradas[i];
         }
         return result;
     }
-    public void setEntrada(){
-        for(int i=0;i<6;i++){
-            this.Entradas[i]=i+1;
+    public void setEntrada(String entrada){
+        String[] valores = entrada.split("\\s+");
+        int i=0;
+        for (i = 0; i < valores.length - 1; i++) {
+            System.out.println(valores[i]);
+            this.Entradas[i] = Double.valueOf(valores[i]).doubleValue();
+//            System.out.println("Entrada:  " + this.Entradas[i]);
         }
+        setDk( Double.valueOf(valores[valores.length-1]).doubleValue() );
+//        System.out.println("DK: " + this.dk);
+    }
+
+    public void sigmoid( double entrada, double epoca, double peso ){
+        this.y = 1 /( 1 + (1/this.e) * entrada * epoca * peso * - this.teta );
     }
 
     public void treinamento(){
-        System.out.println("Opa");
-        preenchePesos();
-        int epocas = 0;
-        boolean erro = false;
+        boolean erro = true;
+        int count = 0;
         int k = Entradas.length-1;
-        while(!erro){
-            for (int i = 0; i < Entradas.length; i++) {
-                u = pesos[i] * Entradas[k];
-                y = u;
-                System.out.println("Opa1");
-                if(y != this.pesos[i]){
-                    this.pesos[i] = novoPeso(this.pesos[i], -1, this.Entradas[k]);
+        double aux=0;
+
+        while(erro){
+            for (int i = 0; i < this.Entradas.length -1; i++) {
+
+                System.out.println("Epocas : " + count + 1);
+
+//                for (int j = 0; j <this.pesos.length; j++) {
+//                    this.pesos[j] += (this.y - this.dk) * this.Entradas[i];
+//                    this.u = this.pesos[i] * Entradas[i] - this.teta;
+//                }
+                for (int l = 0; l < this.pesos.length; l++) {
+                    aux = aux + (this.pesos[l] * this.Entradas[l]);
+                }
+                this.u = aux;
+
+                this.teta += (y - this.dk);
+
+//                this.y = this.ativacao();
+
+                if(this.y != this.dk){
+                    this.pesos[i] = novoPeso(this.pesos[i], this.Entradas[i]);
                     erro = !erro;
-                    System.out.println("Opa2");
-                    break;
+                    return;
                 }
 
+                System.out.printf("y: %.10f -> desired: %.1f\n", this.y, this.dk);
             }
-            System.out.println("Opa3");
-            epocas++;
+            count++;
+            this.epocas++;
         }
     }
 
-    public String operacao(){
-        double aux=0;
-        for (int i = 0; i < this.pesos.length; i++) {
-            aux = aux + (this.pesos[i] * this.Entradas[i]);
-        }
-        u = aux;
-        y = u;
 
-        System.out.println("Valor de Y:"+y);
-        if(y <  0){
+    public String operacao(){
+        if(y <  (-0.3)){//função ativação pega o valor de y e conpara com o intervalo para saber se a amostra é de ALTO risco, MÉDIO risco, BAIXO risco.
             return "O elemento pertence a classe de ALTO risco!";
-        }else if((y > (-1)) || (y < 1) ){
+        }else if((y > (0.3)) || (y < (-0.3)) ){
             return "O elemento pertence a classe de MÉDIO risco!";
-        }else if(y > 0){
+        }else if(y > 0.3){
             return "O elemento pertence a classe de BAIXO risco!";
         }else{
             return "erro: falta de precisão!";
         }
+    }
 
+    public int ativacao(){
+        double aux=0;
+        for (int i = 0; i < this.pesos.length; i++) {
+            aux = aux + (this.pesos[i] * this.Entradas[i]) - (this.teta);
+        }
+        this.u = aux;
+        this.y = u/100;
 
+//        System.out.println("Valor de Y:"+y);
+//        System.out.println("valor AQUI: "+ this.y);
+
+        if(y <  (-0.3)){//função ativação pega o valor de y e conpara com o intervalo para saber se a amostra é de ALTO risco, MÉDIO risco, BAIXO risco.
+            return -1;
+        }else if((y > (0.3)) || (y < (-0.3)) ){
+            return 0;
+        }else{
+            return 1;
+        }
     }
 
 }
